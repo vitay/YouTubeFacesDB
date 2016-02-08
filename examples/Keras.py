@@ -11,7 +11,8 @@ db_filename = '/scratch/vitay/Datasets/YouTubeFaces/ytfdb_100_100_bw.h5'
 generate_ytf_database(	
 	directory='/scratch/vitay/Datasets/YouTubeFaces', 
 	filename=db_filename,
-    labels=2,
+    labels=5,
+    max_number=1000,
 	size=(100, 100),
 	color=False,
 	rgb_first=True,

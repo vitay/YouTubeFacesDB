@@ -111,6 +111,7 @@ def generate_ytf_database(
 	filename, 
 	size, 
 	labels=None,
+	max_number=-1, 
 	max_images_per_person=-1, 
 	color=True, 
 	rgb_first=True, 
@@ -124,6 +125,7 @@ def generate_ytf_database(
 	* `filename`: path and name of the hdf5 file where the DB will be saved.
 	* `size`: (width, height) size for the extracted images.
 	* `labels`: number or list of labels which should be used (default: None, for all labels).
+	* `max_number`: maximum number of images (default: -1, all of them).
 	* `max_images_per_person`: maximum number of images which should be extracted per person (default: -1, all images)
 	* `color`: if the color channels should be preserved (default: True) 
 	* `rgb_first`: if True, the numpy arrays of colored images will have the shape (3, w, h), otherwise (w, h, 3) (default: True). Useful for Theano backends.
@@ -151,6 +153,11 @@ def generate_ytf_database(
 	nb_images = len(metadata)
 	print('Found', nb_images, 'images for', len(labels), 'people.')
 
+	# Reduce the number of images
+	if max_number != -1:
+		print('Reducing this number to', max_number)
+		metadata = random.sample(metadata, max_number)
+
 	# Get all the images, crop/resize them, and save them into a hdf5 file
-	_create_db(directory, metadata[:100], labels, filename, size, color, rgb_first, cropped)
+	_create_db(directory, metadata, labels, filename, size, color, rgb_first, cropped)
 	print('Done in', time()-tstart, 'seconds.')
