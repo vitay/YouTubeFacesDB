@@ -1,1 +1,1 @@
-from Generator import create_ytf_database
+from Generator import generate_ytf_database

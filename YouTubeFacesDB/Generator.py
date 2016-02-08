@@ -1,12 +1,16 @@
+# Standard library
 from __future__ import print_function, with_statement
-import numpy as np
-import h5py
-from PIL import Image
-import csv
 from time import time
 import re
 import os
+import random
+import csv
+# Dependencies
+import numpy as np
+import h5py
+from PIL import Image
 
+# Structure of the YFT directory
 original_folder = '/frame_images_DB/'
 aligned_folder = '/aligned_images_DB/'
 
@@ -14,20 +18,30 @@ def _get_labels(directory):
 	"Retrieves the list of labels from the aligned directory"
 	return sorted(os.listdir(directory + aligned_folder), key=lambda s: s.lower())
 
+def _check_labels(labels, directory):
+	"Compares the provided list of labels to ones which exist."
+	orig = _get_labels(directory)
+	for label in labels:
+		if not label in orig:
+			print('Error:', label, 'does not exist in the YouTube Faces database.')
+			exit(0)
 
-def _gather_images_info(directory, labels):
+
+def _gather_images_info(directory, labels, max_images_per_person):
 	"Iterates over all labels and gets the filenames and crop information"
 	data = []
 	for name in labels:
 		# Each image is described in frame_images_DB/Aaron_Eckhart.labeled_faces.txt
 		data_file = directory + original_folder + name + '.labeled_faces.txt'
+		# Read the file
+		data_person = []
 		try:
 			with open(data_file, 'r') as csvfile:
 				for entry in csv.reader(csvfile, delimiter=','):
 					img_name = entry[0].replace('\\', '/')
 					center_w, center_h = int(entry[2]), int(entry[3])
 					size_w, size_h = int(entry[4]), int(entry[5])
-					data.append({
+					data_person.append({
 						'name': name,
 						'filename': img_name,
 						'center': (center_w, center_h),
@@ -37,6 +51,12 @@ def _gather_images_info(directory, labels):
 			print('Error: could not read', data_file)
 			print(e)
 			return data
+		# Possibly select a maximal number of them
+		if max_images_per_person == -1: # everything
+			data.extend(data_person)
+		else:
+			data.extend(random.sample(data_person, max_images_per_person))
+
 	return data
 
 def _create_db(directory, metadata, labels, filename, size, color, rgb_first, cropped):
@@ -86,28 +106,48 @@ def _create_db(directory, metadata, labels, filename, size, color, rgb_first, cr
 		dset_Y[idx] = y
 		dset_video[idx] = video_idx
 
-def create_ytf_database(directory, filename, size, color=True, rgb_first=True, cropped=True):
+def generate_ytf_database(
+	directory, 
+	filename, 
+	size, 
+	labels=None,
+	max_images_per_person=-1, 
+	color=True, 
+	rgb_first=True, 
+	cropped=True):
 	"""
-	Main method to create the YouTube Face database.
+	Method to generate a subset of the YouTube Faces database in a HDF5 file.
 
 	Arguments:
 
 	* `directory`: director where the YouTube Face DB is located.
 	* `filename`: path and name of the hdf5 file where the DB will be saved.
 	* `size`: (width, height) size for the extracted images.
+	* `labels`: number or list of labels which should be used (default: None, for all labels).
+	* `max_images_per_person`: maximum number of images which should be extracted per person (default: -1, all images)
 	* `color`: if the color channels should be preserved (default: True) 
 	* `rgb_first`: if True, the numpy arrays of colored images will have the shape (3, w, h), otherwise (w, h, 3) (default: True). Useful for Theano backends.
 	* `cropped`: if the images should be cropped around the detected face (default: True)
 	"""
 	tstart = time()
 	# Get the labels
-	print('Retrieving the labels...')
-	labels = _get_labels(directory)
-	return
+	if labels==None:
+		print('Retrieving all labels...')
+		labels = _get_labels(directory)
+	elif isinstance(labels, int):
+		print('Generating',  labels, 'labels randomly...')
+		nb_labels = labels
+		orig = _get_labels(directory)
+		labels = sorted(random.sample(orig, nb_labels), key=lambda s: s.lower())
+		for label in labels:
+			print('\t', label)
+	else:
+		print('Checking the labels...')
+		_check_labels(labels, directory)
 
 	# Retrieve the metadata on all images
 	print('Gathering image locations...')
-	metadata = _gather_images_info(directory, labels)
+	metadata = _gather_images_info(directory, labels, max_images_per_person)
 	nb_images = len(metadata)
 	print('Found', nb_images, 'images for', len(labels), 'people.')
 
