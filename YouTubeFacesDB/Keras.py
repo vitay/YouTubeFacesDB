@@ -10,7 +10,6 @@ db_filename = '/scratch/vitay/Datasets/YouTubeFaces/ytfdb_100_100_bw.h5'
 # Create the database
 create_ytf_database(	
 	directory='/scratch/vitay/Datasets/YouTubeFaces', 
-	labels='../labels.txt',
 	filename=db_filename,
 	size=(100, 100),
 	color=False,

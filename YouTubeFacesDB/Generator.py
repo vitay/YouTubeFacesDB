@@ -5,17 +5,14 @@ from PIL import Image
 import csv
 from time import time
 import re
+import os
 
 original_folder = '/frame_images_DB/'
 aligned_folder = '/aligned_images_DB/'
 
-def _get_labels(filename):
-	"Retrieves the list of labels from labels.txt"
-	labels = []
-	with open(filename, 'r') as csvfile:
-		for entry in csv.reader(csvfile, delimiter=','):
-			labels.append(entry[0].strip())
-	return labels
+def _get_labels(directory):
+	"Retrieves the list of labels from the aligned directory"
+	return sorted(os.listdir(directory + aligned_folder), key=lambda s: s.lower())
 
 
 def _gather_images_info(directory, labels):
@@ -89,14 +86,13 @@ def _create_db(directory, metadata, labels, filename, size, color, rgb_first, cr
 		dset_Y[idx] = y
 		dset_video[idx] = video_idx
 
-def create_ytf_database(directory, labels, filename, size, color=True, rgb_first=True, cropped=True):
+def create_ytf_database(directory, filename, size, color=True, rgb_first=True, cropped=True):
 	"""
 	Main method to create the YouTube Face database.
 
 	Arguments:
 
 	* `directory`: director where the YouTube Face DB is located.
-	* `labels`: path and name of the file containing all the labels.
 	* `filename`: path and name of the hdf5 file where the DB will be saved.
 	* `size`: (width, height) size for the extracted images.
 	* `color`: if the color channels should be preserved (default: True) 
@@ -106,16 +102,15 @@ def create_ytf_database(directory, labels, filename, size, color=True, rgb_first
 	tstart = time()
 	# Get the labels
 	print('Retrieving the labels...')
-	label_list = _get_labels(labels)
-	print(label_list)
+	labels = _get_labels(directory)
 	return
 
 	# Retrieve the metadata on all images
 	print('Gathering image locations...')
-	metadata = _gather_images_info(directory, label_list)
+	metadata = _gather_images_info(directory, labels)
 	nb_images = len(metadata)
-	print('Found', nb_images, 'images for', len(label_list), 'people.')
+	print('Found', nb_images, 'images for', len(labels), 'people.')
 
 	# Get all the images, crop/resize them, and save them into a hdf5 file
-	_create_db(directory, metadata[:100], label_list, filename, size, color, rgb_first, cropped)
+	_create_db(directory, metadata[:100], labels, filename, size, color, rgb_first, cropped)
 	print('Done in', time()-tstart, 'seconds.')
