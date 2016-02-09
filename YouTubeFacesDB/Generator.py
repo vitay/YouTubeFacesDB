@@ -72,9 +72,17 @@ def _create_db(directory, metadata, labels, filename, size, color, rgb_first, cr
 	print('Final size of the images:', final_size)
 	# Initialize the hdf5 DB
 	f = h5py.File(filename, "w")
-	dset_X = f.create_dataset("X", (nb_images,) + final_size, dtype='i')
+	dset_X = f.create_dataset("X", (nb_images,) + final_size, dtype='f')
 	dset_Y = f.create_dataset("Y", (nb_images,), dtype='i')
 	dset_video = f.create_dataset("video", (nb_images,), dtype='i')
+	# Save the list of labels
+	max_length = 0
+	for label in labels:
+		max_length = max(max_length, len(label))
+	asciiList = [n.encode("ascii", "ignore") for n in labels]
+	f.create_dataset('labels', (len(labels),1),'S'+str(max_length), labels)
+	# Compute the mean image
+	mean_img = np.zeros(final_size)
 	# Iterate over all images
 	for idx in range(nb_images):
 		# Retrieve the info
@@ -97,14 +105,18 @@ def _create_db(directory, metadata, labels, filename, size, color, rgb_first, cr
 		if not color:
 			img = img.convert('L')
 		# Get the numpy array
-		img_data = np.array(img)
+		img_data = np.array(img).astype('float32')/255.
 		# Swap the axes (to have (3, w, h))
 		if color and rgb_first:
 			img_data = img_data.swapaxes(0, 2)
+		# Update the mean
+		mean_img += (img_data - mean_img)/float(idx+1)
 		# Push it to the HDF5 file
 		dset_X[idx, ...] = img_data
 		dset_Y[idx] = y
 		dset_video[idx] = video_idx
+	# Last, save the mean
+	f.create_dataset('mean', (1, )+final_size,'f', mean_img)
 
 def generate_ytf_database(
 	directory, 

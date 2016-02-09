@@ -3,31 +3,34 @@ from time import time
 import numpy as np
 import h5py
 
-from YouTubeFacesDB import generate_ytf_database
+from YouTubeFacesDB import generate_ytf_database, YouTubeFacesDB
 
-db_filename = '/scratch/vitay/Datasets/YouTubeFaces/ytfdb_100_100_bw.h5'
+db_filename = 'ytfdb_100_100_bw.h5'
 
 # Create the database
 generate_ytf_database(	
-	directory='/scratch/vitay/Datasets/YouTubeFaces', 
+	directory='../data', 
 	filename=db_filename,
-    labels=5,
-    max_number=1000,
+    labels=['George_W_Bush', 'Bill_Clinton'],
+    max_number=-1,
 	size=(100, 100),
-	color=False,
+	color=True,
 	rgb_first=True,
 	cropped=True
 )
 
 # Load the data
 tstart = time()
-f = h5py.File(db_filename, "r")
-X = np.array(f.get('X'))
-y = np.array(f.get('Y'))
+db = YouTubeFacesDB(db_filename)
+X, y = db.get_whole_data()
+N = db.nb_samples
+d = db.input_dim
+
+print(N, d)
+
 print('Data loaded in', time()-tstart)
 
 # Normalize inputs
-X = X.astype('float32')
-X /= 255.
-mean_face = np.mean(X, axis=0)
+mean_face = db.mean
 X -= mean_face
+
