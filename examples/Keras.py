@@ -14,8 +14,9 @@ generate_ytf_database(
     labels=['George_W_Bush', 'Bill_Clinton'],
     max_number=-1,
 	size=(100, 100),
-	color=True,
-	rgb_first=True,
+	color=False,
+	rgb_first=False,
+	bw_first=True,
 	cropped=True
 )
 

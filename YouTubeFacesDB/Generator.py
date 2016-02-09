@@ -59,16 +59,20 @@ def _gather_images_info(directory, labels, max_images_per_person):
 
 	return data
 
-def _create_db(directory, metadata, labels, filename, size, color, rgb_first, cropped):
+def _create_db(directory, metadata, labels, filename, size, color, rgb_first, bw_first, cropped):
 	"Main method to fetch all images into the hdf5 DB."
 	# Total number of images
 	nb_images = len(metadata)
 	# Final size of the image
-	if color:
+	if color and rgb_first:
 		final_size = (3, ) # channel is first
+	elif not color and bw_first: # add a dummy (1,) in front
+			final_size = (1, )
 	else:
-		final_size = ()
+		final_size = ()			
 	final_size += size
+	if color and not rgb_first:
+		final_size += (3,)
 	print('Final size of the images:', final_size)
 	# Initialize the hdf5 DB
 	f = h5py.File(filename, "w")
@@ -109,6 +113,9 @@ def _create_db(directory, metadata, labels, filename, size, color, rgb_first, cr
 		# Swap the axes (to have (3, w, h))
 		if color and rgb_first:
 			img_data = img_data.swapaxes(0, 2)
+		# Add a dummy first axis to BW images for theano
+		if not color and bw_first:
+			img_data = img_data[np.newaxis, :, :]
 		# Update the mean
 		mean_img += (img_data - mean_img)/float(idx+1)
 		# Push it to the HDF5 file
@@ -127,6 +134,7 @@ def generate_ytf_database(
 	max_images_per_person=-1, 
 	color=True, 
 	rgb_first=True, 
+	bw_first=False, 
 	cropped=True):
 	"""
 	Method to generate a subset of the YouTube Faces database in a HDF5 file.
@@ -141,6 +149,7 @@ def generate_ytf_database(
 	* `max_images_per_person`: maximum number of images which should be extracted per person (default: -1, all images)
 	* `color`: if the color channels should be preserved (default: True) 
 	* `rgb_first`: if True, the numpy arrays of colored images will have the shape (3, w, h), otherwise (w, h, 3) (default: True). Useful for Theano backends.
+	* `bw_first`: if True, the numpy arrays of black&white images will have the shape (1, w, h), otherwise (w, h) (default: False). Useful for Theano backends.
 	* `cropped`: if the images should be cropped around the detected face (default: True)
 	"""
 	tstart = time()
@@ -171,5 +180,5 @@ def generate_ytf_database(
 		metadata = random.sample(metadata, max_number)
 
 	# Get all the images, crop/resize them, and save them into a hdf5 file
-	_create_db(directory, metadata, labels, filename, size, color, rgb_first, cropped)
+	_create_db(directory, metadata, labels, filename, size, color, rgb_first, bw_first, cropped)
 	print('Done in', time()-tstart, 'seconds.')
