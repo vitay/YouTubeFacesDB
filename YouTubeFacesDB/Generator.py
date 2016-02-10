@@ -175,7 +175,7 @@ def generate_ytf_database(
 	print('Found', nb_images, 'images for', len(labels), 'people.')
 
 	# Reduce the number of images
-	if max_number != -1:
+	if max_number != -1 and max_number < nb_images:
 		print('Reducing this number to', max_number)
 		metadata = random.sample(metadata, max_number)
 

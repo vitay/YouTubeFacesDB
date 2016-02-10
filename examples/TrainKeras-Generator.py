@@ -20,6 +20,7 @@ db = YouTubeFacesDB('ytfdb.h5', mean_removal=True, output_type='vector')
 N = db.nb_samples
 d = db.input_dim
 C = db.nb_classes
+mean_face = db.mean
 
 print(N, 'images of size', d, 'loaded in', time()-tstart)
 
@@ -27,7 +28,6 @@ print(N, 'images of size', d, 'loaded in', time()-tstart)
 # Split into a training set and a test set 
 ###############################################################################
 db.split_dataset(validation_size=0.25)
-X_train, y_train = db.get('train')
 X_test, y_test = db.get('val')
 
 ###############################################################################
@@ -59,17 +59,32 @@ model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 # Training
 print('Start training...')
 try:
-	model.fit(X_train, y_train,
-          batch_size=100, nb_epoch=10,
-          show_accuracy=True, verbose=2,
-          validation_data=(X_test, y_test))
+	nb_epochs = 10
+	batch_size = 100
+	for epoch in range(nb_epochs):
+		tstart = time()
+		# Training
+		batch_generator = db.generate_batches(batch_size, dset='train')
+		nb_batches = 0; training_loss = 0.0; training_accuracy = 0.0
+		for X, y in batch_generator:
+			loss, accuracy = model.train_on_batch(X, y, accuracy=True)
+			training_loss += loss
+			training_accuracy += accuracy
+			nb_batches += 1
+		# Validation
+		score = model.evaluate(X_test, y_test,
+                       show_accuracy=True, verbose=0)
+		# Verbose
+		print('Epoch', epoch+1, '/', nb_epochs)
+		print('\tTraining loss:', training_loss/float(nb_batches), 'accuracy:', training_accuracy/float(nb_batches))
+		print('\tValidation loss:', score[0], 'accuracy:', score[1])
+		print('\tTook', time()-tstart)
+
 except (KeyboardInterrupt, ):
 	pass
 
-# Test on the validation set
-score = model.evaluate(X_test, y_test,
-                       show_accuracy=True, verbose=2)
-
+# Validation
 print('Training finished.')
-print('Test score:', score[0])
-print('Test accuracy:', score[1])
+score = model.evaluate(X_test, y_test,
+               show_accuracy=True, verbose=2)
+print('Test loss:', score[0], 'accuracy:', score[1])
