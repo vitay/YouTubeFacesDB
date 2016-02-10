@@ -28,7 +28,6 @@ print(N, 'images of size', d, 'loaded in', time()-tstart)
 # Split into a training set and a test set 
 ###############################################################################
 db.split_dataset(validation_size=0.25)
-X_test, y_test = db.get('val')
 
 ###############################################################################
 # Train a not very deep network
@@ -58,26 +57,31 @@ model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
 # Training
 print('Start training...')
+nb_epochs = 10
+batch_size = 100
 try:
-	nb_epochs = 10
-	batch_size = 100
 	for epoch in range(nb_epochs):
+		print('Epoch', epoch+1, '/', nb_epochs)
 		tstart = time()
 		# Training
 		batch_generator = db.generate_batches(batch_size, dset='train')
-		nb_batches = 0; training_loss = 0.0; training_accuracy = 0.0
+		nb_train_batches = 0; train_loss = 0.0; train_accuracy = 0.0
 		for X, y in batch_generator:
 			loss, accuracy = model.train_on_batch(X, y, accuracy=True)
-			training_loss += loss
-			training_accuracy += accuracy
-			nb_batches += 1
+			train_loss += loss
+			train_accuracy += accuracy
+			nb_train_batches += 1
 		# Validation
-		score = model.evaluate(X_test, y_test,
-                       show_accuracy=True, verbose=0)
+		batch_generator = db.generate_batches(batch_size, dset='val')
+		nb_val_batches = 0; val_loss = 0.0; val_accuracy = 0.0
+		for X, y in batch_generator:
+			loss, accuracy = model.test_on_batch(X, y, accuracy=True)
+			val_loss += loss
+			val_accuracy += accuracy
+			nb_val_batches += 1
 		# Verbose
-		print('Epoch', epoch+1, '/', nb_epochs)
-		print('\tTraining loss:', training_loss/float(nb_batches), 'accuracy:', training_accuracy/float(nb_batches))
-		print('\tValidation loss:', score[0], 'accuracy:', score[1])
+		print('\tTraining loss:', train_loss/float(nb_train_batches), 'accuracy:', train_accuracy/float(nb_train_batches))
+		print('\tValidation loss:', val_loss/float(nb_val_batches), 'accuracy:', val_accuracy/float(nb_val_batches))
 		print('\tTook', time()-tstart)
 
 except (KeyboardInterrupt, ):
@@ -85,6 +89,11 @@ except (KeyboardInterrupt, ):
 
 # Validation
 print('Training finished.')
-score = model.evaluate(X_test, y_test,
-               show_accuracy=True, verbose=2)
-print('Test loss:', score[0], 'accuracy:', score[1])
+batch_generator = db.generate_batches(batch_size, dset='val')
+nb_val_batches = 0; val_loss = 0.0; val_accuracy = 0.0
+for X, y in batch_generator:
+	loss, accuracy = model.test_on_batch(X, y, accuracy=True)
+	val_loss += loss
+	val_accuracy += accuracy
+	nb_val_batches += 1
+print('Test loss:', val_loss/float(nb_val_batches), 'accuracy:', val_accuracy/float(nb_val_batches))

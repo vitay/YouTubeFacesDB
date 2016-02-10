@@ -161,9 +161,13 @@ def generate_ytf_database(
 		print('Generating',  labels, 'labels randomly...')
 		nb_labels = labels
 		orig = _get_labels(directory)
-		labels = sorted(random.sample(orig, nb_labels), key=lambda s: s.lower())
-		for label in labels:
-			print('\t', label)
+		if nb_labels >= len(orig) or nb_labels == -1:
+			print('There are only', len(orig), 'labels in the database...')
+			labels = orig
+		else:
+			labels = sorted(random.sample(orig, nb_labels), key=lambda s: s.lower())
+			for label in labels:
+				print('\t', label)
 	else:
 		print('Checking the labels...')
 		_check_labels(labels, directory)
