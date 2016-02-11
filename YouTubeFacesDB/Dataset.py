@@ -30,6 +30,7 @@ class YouTubeFacesDB(object):
     def __init__(self, filename, mean_removal=False, output_type='vector'):
         """
         Parameters:
+        
         * `filename`: path to the HDF5 file containing the data.
         * `mean_removal`: defines if the mean image should be substracted from each image.
         * `output_type`: ['integer', 'vector'] defines the output for each sample. 'integer' will return the index of the class (e.g. 3), while vector will return a vector ith nb_classes components, all zero but one (e.g. 000...00100). Default: vector. 
