@@ -154,14 +154,14 @@ def generate_ytf_database(
 	"""
 	tstart = time()
 	# Get the labels
-	if labels==None:
+	if labels==None or labels == -1:
 		print('Retrieving all labels...')
 		labels = _get_labels(directory)
 	elif isinstance(labels, int):
 		print('Generating',  labels, 'labels randomly...')
 		nb_labels = labels
 		orig = _get_labels(directory)
-		if nb_labels >= len(orig) or nb_labels == -1:
+		if nb_labels >= len(orig):
 			print('There are only', len(orig), 'labels in the database...')
 			labels = orig
 		else:
