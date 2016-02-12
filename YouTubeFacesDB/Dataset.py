@@ -52,7 +52,9 @@ class YouTubeFacesDB(object):
 
         # Size
         shape = self._X.shape
+        #: Total number of samples in the dataset
         self.nb_samples = shape[0]
+        #: Shape of the inputs
         self.input_dim = shape[1:]
 
         # Indices
@@ -60,22 +62,28 @@ class YouTubeFacesDB(object):
         self._training_indices = self._indices
         self._validation_indices = []
         self._test_indices = []
+        #: Number of samples in the training set
         self.nb_train = self.nb_samples
+        #: Number of samples in the validation set
         self.nb_val = 0
+        #: Number of samples in the test set
         self.nb_test = 0
 
         # Labels
         labels = self.f.get('labels')
+        #: List of labels
         self.labels = []
         for label in labels:
             self.labels.append(str(label[0]))
+        #: Total number of classes
         self.nb_classes = len(self.labels)
         if not output_type in ['integer', 'vector']:
             print("Error: output_type must be in ['integer', 'vector']")
             output_type = 'vector'
+        #: Output type ['integer', 'vector']
         self.output_type = output_type
 
-        # Video indices
+        #: Index of the video for each frame
         self.video = self.f.get('video')
 
     def split_dataset(self, validation_size=0.2, test_size=0.0):

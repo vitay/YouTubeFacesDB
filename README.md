@@ -4,15 +4,18 @@ Python module allowing to load the YouTube Faces Database:
 
 <http://www.cs.tau.ac.il/~wolf/ytfaces/>
 
-It contains N Youtube videos of 1565 different persons, split into frames (leading to N images in total), and annotated to reveal the position and size of each face.
+**Description:** The data set contains 3,425 videos of 1,595 different people. All the videos were downloaded from YouTube. An average of 2.15 videos are available for each subject. The shortest clip duration is 48 frames, the longest clip is 6,070 frames, and the average length of a video clip is 181.3 frames. 
 
-**For TUC users:** the DB is already downloaded on cortex at `/work/TODO`. Copy it to your machine (in `/scratch`, as it is over 25GB) and uncompress it.
+**For TUC users:** the DB is already downloaded on cortex at `/work/biblio/youtube Faces DB` (with the spaces). Copy it to your machine (in `/scratch`, as it is over 25GB) and uncompress it.
 
-## Author
+**Author:** Julien Vitay <julien.vitay@informatik.tu-chemnitz.de>
 
-* Julien Vitay <julien.vitay@informatik.tu-chemnitz.de>
+**License:** MIT
 
-License: MIT
+.. toctree::
+   :maxdepth: 2
+
+   api
 
 ## Installation
 
@@ -32,6 +35,8 @@ To build the documentation, you will need Sphinx `pip install Sphinx --user`. Yo
 ~~~bash
 make html
 ~~~
+
+You can then access `docs/build/html/index.html` with your browser.
 
 ## Tutorial
 
@@ -56,6 +61,8 @@ generate_ytf_database(
 Check the doc of `generate_ytf_database` to see other arguments to this function.
 
 **Beware:** if you try to generate all color images of all labels with a size (100, 100), the process will take over half an hour and the HDF5 file will be over 50GB, so do not save it in your home directory.
+
+.. autofunction:: YouTubeFacesDB.generate_ytf_database
 
 ### Loading the HDF5 file for usage in Python
 
@@ -135,4 +142,8 @@ X_val, y_val = db.get('val')
 X_test, y_test = db.get('test')
 ~~~
 
+By default, the validation set has 20% of the data and the test set 0%.
+
 #### Generating minibatches
+
+Loading the whole dataset in memory with `get()` defeats the purpose of storing a large-scale dataset in a HDF5 file. In practice, it is recommended to load only minibatches (of let's say 1000 samples) one at a time, process them, and 
