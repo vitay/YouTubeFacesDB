@@ -1,14 +1,13 @@
 Documentation
 =============
 
-Generate a subset of YTFDB
---------------------------
+Method ``generate_ytf_database``
+--------------------------------
 
 .. autofunction:: YouTubeFacesDB.generate_ytf_database
 
-Loading a HDF5 file
--------------------
+Class ``YouTubeFacesDB``
+------------------------
 
 .. autoclass:: YouTubeFacesDB.YouTubeFacesDB
     :members:
-    :autodoc_member_order: groupwise

@@ -12,11 +12,6 @@ Python module allowing to load the YouTube Faces Database:
 
 **License:** MIT
 
-.. toctree::
-   :maxdepth: 2
-
-   api
-
 ## Installation
 
 Apart from the usual python (2.7) + numpy dependencies, the module requires:
@@ -61,8 +56,6 @@ generate_ytf_database(
 Check the doc of `generate_ytf_database` to see other arguments to this function.
 
 **Beware:** if you try to generate all color images of all labels with a size (100, 100), the process will take over half an hour and the HDF5 file will be over 50GB, so do not save it in your home directory.
-
-.. autofunction:: YouTubeFacesDB.generate_ytf_database
 
 ### Loading the HDF5 file for usage in Python
 
@@ -146,4 +139,22 @@ By default, the validation set has 20% of the data and the test set 0%.
 
 #### Generating minibatches
 
-Loading the whole dataset in memory with `get()` defeats the purpose of storing a large-scale dataset in a HDF5 file. In practice, it is recommended to load only minibatches (of let's say 1000 samples) one at a time, process them, and 
+Loading the whole dataset in memory with `get()` defeats the purpose of storing a large-scale dataset in a HDF5 file. In practice, it is recommended to load only minibatches (of let's say 1000 samples) one at a time, process them, and ask for a new one.
+
+The method `generate_batches()` returns a generator allowing to loop over a dataset and retrieve the data `(X, y)` for each minibatch:
+
+~~~python
+for X, y  in db.generate_batches(batch_size=100, dset='train', rest=True):
+    do_something(X, y)    
+~~~
+
+`batch_size` defines how many samples will be in each minibatch, `dset` from which dataset the samples will be taken (`['all', 'train', 'val', 'test']`) and `rest` what should be done with the last samples if the total number of samples is not a multiple of the batch size. For example, if the dataset has 1537 samples, and the batch size is 100, the `for` loop will be executed 15 times. The remaining 37 samples will be returned only if `rest` is set to True (as smaller batches may cause rpoblems with some tensor libraries).
+
+Between two calls to `generate_batches()`, the indices are shuffled, so the minibatches will never be identical between epochs.
+
+The example in `examples/TrainKeras-Generator.py` shows how to use minibatches with Keras. Strangely, the `fit_generator()` method of Keras does not work with this generator, as Keras runs the generator in a separate thread and the h5py module does not seem to like it...
+
+
+
+
+
